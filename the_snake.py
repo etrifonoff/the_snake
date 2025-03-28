@@ -1,4 +1,3 @@
-
 import sys
 from random import randint
 
@@ -30,7 +29,7 @@ APPLE_COLOR = RED
 SNAKE_COLOR = GREEN
 
 # Настройка игрового окна и скорости игры:
-SPEED = 20
+SPEED = 10
 
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
 pg.display.set_caption('Змейка')
@@ -73,27 +72,33 @@ class Apple(GameObject):
 
     def __init__(self, body_color=APPLE_COLOR, occupied_cells=None):
         super().__init__(body_color=body_color)
-        self.body_color = body_color
         self.randomize_position(occupied_cells)
 
     def randomize_position(self, occupied_cells=None):
         """
-        Метод генерирует случайную позицию яблока,
+        Генерирует случайную позицию яблока,
         не совпадающую с занятыми клетками.
 
+        Метод выбирает случайные координаты в пределах игрового поля
+        и проверяет,
+        что они не пересекаются с переданными занятыми клетками.
+
         Args:
-            occupied_cells: список кортежей с координатами занятых клеток.
+            occupied_cells: Список кортежей с координатами занятых клеток.
+                            По умолчанию пустой список.
+
+        Return value:
+            Нет. Метод изменяет атрибут position объекта.
         """
         if occupied_cells is None:
             occupied_cells = []
 
         while True:
-            new_position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE,
-                            randint(0, GRID_HEIGHT - 1) * GRID_SIZE)
+            self.position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE,
+                             randint(0, GRID_HEIGHT - 1) * GRID_SIZE)
 
             # Если позиция не занята, используем ее
-            if new_position not in occupied_cells:
-                self.position = new_position
+            if self.position not in occupied_cells:
                 break
 
     def draw(self):
@@ -109,8 +114,7 @@ class Snake(GameObject):
     """Класс, описывающий аттрибуты и методы змейки."""
 
     def __init__(self, body_color=SNAKE_COLOR):
-        super().__init__()
-        self.body_color = body_color
+        super().__init__(body_color=body_color)
         self.last = None
         self.reset()
 
@@ -138,7 +142,7 @@ class Snake(GameObject):
             self.draw_cell(position)
 
         # Отрисовка головы змейки
-        self.draw_cell(self.positions[0])
+        self.draw_cell(self.get_head_position())
 
         # Затирание последнего сегмента
         if self.last:
@@ -204,10 +208,10 @@ def main():
         snake.move()
 
         if (len(snake.positions) > 4
-                and snake.get_head_position()) in snake.positions[1:]:
+                and snake.get_head_position()) in snake.positions[4:]:
             snake.reset()
 
-        if snake.get_head_position() == apple.get_position():
+        elif snake.get_head_position() == apple.get_position():
             snake.eat_apple(apple.get_position())
             apple.randomize_position(snake.positions)
 
